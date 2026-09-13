@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Administración · Aula Virtual</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<nav id="navbar"></nav>
+
+<main class="contenedor" id="panel-admin">
+    <h1>Panel de administración</h1>
+    <p id="aviso-solo-admin" class="texto-muted oculto">
+        Como coordinador podés gestionar cursos y categorías. La gestión de usuarios está reservada al administrador.
+    </p>
+
+    <div class="pestanas">
+        <button class="pestana-boton activo" data-panel="pestana-usuarios">Usuarios</button>
+        <button class="pestana-boton" data-panel="pestana-cursos">Cursos</button>
+        <button class="pestana-boton" data-panel="pestana-categorias">Categorías</button>
+    </div>
+
+    <section id="pestana-usuarios" class="pestana-panel">
+        <h2>Usuarios</h2>
+        <p class="texto-muted">Activá cuentas nuevas y asigná roles. No podés modificar tu propia cuenta desde acá.</p>
+        <div id="tabla-usuarios"></div>
+    </section>
+
+    <section id="pestana-cursos" class="pestana-panel oculto">
+        <h2>Cursos</h2>
+        <div class="panel-formulario">
+            <form id="form-nuevo-curso">
+                <label for="curso-nombre">Nombre</label>
+                <input type="text" id="curso-nombre" name="nombre" required placeholder="Ej: Informática 4° Año">
+
+                <label for="curso-materia">Materia</label>
+                <input type="text" id="curso-materia" name="materia" placeholder="Ej: Informática">
+
+                <label for="curso-descripcion">Descripción</label>
+                <textarea id="curso-descripcion" name="descripcion"></textarea>
+
+                <button type="submit" class="btn btn-primario">Crear curso</button>
+            </form>
+        </div>
+        <div id="tabla-cursos"></div>
+    </section>
+
+    <section id="pestana-categorias" class="pestana-panel oculto">
+        <h2>Categorías</h2>
+        <div class="panel-formulario">
+            <form id="form-nueva-categoria">
+                <label for="categoria-nombre">Nombre</label>
+                <input type="text" id="categoria-nombre" name="nombre" required placeholder="Ej: Recursos audiovisuales">
+
+                <label for="categoria-descripcion">Descripción</label>
+                <textarea id="categoria-descripcion" name="descripcion"></textarea>
+
+                <button type="submit" class="btn btn-primario">Crear categoría</button>
+            </form>
+        </div>
+        <div id="tabla-categorias"></div>
+    </section>
+
+    <p class="texto-muted" style="margin-top:2rem;">
+        Para publicaciones y recursos, gestionalos directamente desde
+        <a href="publicaciones.html">Publicaciones</a> y <a href="recursos.html">Recursos</a>:
+        como administrador o coordinador podés editar o eliminar cualquier contenido desde esas páginas.
+    </p>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="js/supabase.js"></script>
+<script src="js/utils.js"></script>
+<script src="js/app.js"></script>
+<script src="js/admin.js"></script>
+</body>
+</html>

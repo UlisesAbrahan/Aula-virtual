@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Publicaciones · Aula Virtual</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<nav id="navbar"></nav>
+
+<main class="contenedor">
+    <div class="franja-seccion">
+        <h1>Publicaciones</h1>
+        <button id="btn-nueva-publicacion" class="btn btn-primario oculto">+ Nueva publicación</button>
+    </div>
+
+    <div id="panel-nueva-publicacion" class="panel-formulario oculto">
+        <h2>Nueva publicación</h2>
+        <form id="form-nueva-publicacion">
+            <label for="np-titulo">Título</label>
+            <input type="text" id="np-titulo" name="titulo" required>
+
+            <div style="display:flex; gap:1rem; flex-wrap:wrap;">
+                <div style="flex:1; min-width:160px;">
+                    <label for="nueva-pub-categoria">Categoría</label>
+                    <select id="nueva-pub-categoria" name="categoria_id" required></select>
+                </div>
+                <div style="flex:1; min-width:160px;">
+                    <label for="nueva-pub-curso">Curso (opcional)</label>
+                    <select id="nueva-pub-curso" name="curso_id">
+                        <option value="">Todos los cursos</option>
+                    </select>
+                </div>
+                <div style="flex:1; min-width:120px;">
+                    <label for="np-trimestre">Trimestre</label>
+                    <select id="np-trimestre" name="trimestre">
+                        <option value="">-</option>
+                        <option value="1">1° Trimestre</option>
+                        <option value="2">2° Trimestre</option>
+                        <option value="3">3° Trimestre</option>
+                    </select>
+                </div>
+            </div>
+
+            <label for="np-unidad">Unidad / Tema</label>
+            <input type="text" id="np-unidad" name="unidad" placeholder="Ej: Bases de Datos">
+
+            <label for="np-etiquetas">Etiquetas (separadas por coma)</label>
+            <input type="text" id="np-etiquetas" name="etiquetas" placeholder="Ej: basesdedatos, der, 3año">
+
+            <label>Contenido</label>
+            <div class="barra-editor">
+                <button type="button" data-comando="bold"><b>N</b></button>
+                <button type="button" data-comando="italic"><i>K</i></button>
+                <button type="button" data-comando="underline"><u>S</u></button>
+                <button type="button" data-comando="insertUnorderedList">• Lista</button>
+                <button type="button" data-comando="formatBlock" data-valor="h3">Título</button>
+            </div>
+            <div id="nueva-pub-editor" class="editor-contenido" contenteditable="true"></div>
+
+            <button type="submit" class="btn btn-primario">Publicar</button>
+        </form>
+    </div>
+
+    <div class="barra-filtros">
+        <input type="text" id="filtro-buscar" placeholder="Buscar por título o contenido...">
+        <select id="filtro-categoria"></select>
+        <select id="filtro-curso"></select>
+        <select id="filtro-orden">
+            <option value="desc">Más recientes primero</option>
+            <option value="asc">Más antiguas primero</option>
+        </select>
+    </div>
+
+    <div id="lista-publicaciones" class="grid-tarjetas"></div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="js/supabase.js"></script>
+<script src="js/utils.js"></script>
+<script src="js/app.js"></script>
+<script src="js/publicaciones.js"></script>
+<script>
+    document.querySelectorAll(".barra-editor button").forEach((boton) => {
+        boton.addEventListener("click", () => {
+            document.getElementById("nueva-pub-editor").focus();
+            document.execCommand(boton.dataset.comando, false, boton.dataset.valor || null);
+        });
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mi perfil · Aula Virtual</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<nav id="navbar"></nav>
+
+<main class="contenedor">
+    <h1>Mi perfil</h1>
+
+    <div class="panel-formulario">
+        <h2>Datos personales</h2>
+        <p><strong>Email:</strong> <span id="perfil-email"></span></p>
+        <p><strong>Rol:</strong> <span id="perfil-rol"></span></p>
+        <p><strong>Alta:</strong> <span id="perfil-fecha-alta"></span></p>
+
+        <form id="form-datos-perfil">
+            <label for="perfil-nombre">Nombre</label>
+            <input type="text" id="perfil-nombre" name="nombre" required>
+
+            <label for="perfil-apellido">Apellido</label>
+            <input type="text" id="perfil-apellido" name="apellido" required>
+
+            <button type="submit" class="btn btn-primario">Guardar cambios</button>
+        </form>
+    </div>
+
+    <div class="panel-formulario">
+        <h2>Cambiar contraseña</h2>
+        <form id="form-cambiar-password">
+            <label for="password_nueva">Nueva contraseña</label>
+            <input type="password" id="password_nueva" name="password_nueva" required minlength="8">
+
+            <label for="password_confirmacion">Confirmar nueva contraseña</label>
+            <input type="password" id="password_confirmacion" name="password_confirmacion" required minlength="8">
+
+            <button type="submit" class="btn btn-primario">Cambiar contraseña</button>
+        </form>
+    </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="js/supabase.js"></script>
+<script src="js/utils.js"></script>
+<script src="js/app.js"></script>
+<script src="js/perfil.js"></script>
+</body>
+</html>
