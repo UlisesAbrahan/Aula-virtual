@@ -95,7 +95,7 @@ async function inicializarNavbar() {
 
     nav.innerHTML = `
         <div class="nav-inner">
-            <a href="index.html" class="nav-marca">Aula Virtual · Informática y Matemática</a>
+            <a href="index.html" class="nav-marca">Aula Virtual EPET 1 · AREA: Informática y Matemática</a>
             <button id="btn-menu-movil" class="btn-menu-movil" aria-label="Abrir menú">☰</button>
             <div id="nav-links" class="nav-links">${linksPrivados}</div>
             ${areaUsuario}
