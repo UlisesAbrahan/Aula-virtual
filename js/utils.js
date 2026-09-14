@@ -138,6 +138,33 @@ async function poblarSelect(selectEl, tabla, { incluirTodos = true } = {}) {
         data.map((fila) => `<option value="${fila.id}">${escapeHTML(fila.nombre)}</option>`).join("");
 }
 
+function validarArchivoPDF(file) {
+    const extension = file.name.split(".").pop().toLowerCase();
+    if (extension !== "pdf" || file.type && file.type !== "application/pdf") {
+        return { valido: false, mensaje: "Solo se permiten archivos PDF." };
+    }
+    if (file.size > TAMANO_MAXIMO_BYTES) {
+        return { valido: false, mensaje: "El PDF supera el tamaño máximo permitido (25 MB)." };
+    }
+    return { valido: true, extension: "pdf" };
+}
+
+/** Genera una URL firmada y dispara la descarga de un archivo del bucket 'recursos' */
+async function descargarArchivoStorage(ruta, nombreArchivo) {
+    const { data, error } = await supabaseClient.storage
+        .from(BUCKET_RECURSOS)
+        .createSignedUrl(ruta, 60);
+
+    if (error || !data) {
+        mostrarToast("No se pudo generar el enlace de descarga.", "error");
+        return;
+    }
+    const enlace = document.createElement("a");
+    enlace.href = data.signedUrl;
+    enlace.download = nombreArchivo;
+    enlace.click();
+}
+
 function validarArchivo(file) {
     const extension = file.name.split(".").pop().toLowerCase();
     if (!EXTENSIONES_PERMITIDAS.includes(extension)) {

@@ -68,18 +68,7 @@ async function cargarRecursos() {
 }
 
 async function descargarRecurso(ruta, nombreArchivo) {
-    const { data, error } = await supabaseClient.storage
-        .from(BUCKET_RECURSOS)
-        .createSignedUrl(ruta, 60); // válido por 60 segundos
-
-    if (error || !data) {
-        mostrarToast("No se pudo generar el enlace de descarga.", "error");
-        return;
-    }
-    const enlace = document.createElement("a");
-    enlace.href = data.signedUrl;
-    enlace.download = nombreArchivo;
-    enlace.click();
+    await descargarArchivoStorage(ruta, nombreArchivo);
 }
 
 async function eliminarRecurso(id, ruta) {
@@ -129,7 +118,7 @@ async function inicializarFormularioSubir() {
         const archivo = form.archivo.files[0];
         const categoria_id = form.categoria_id.value || null;
         const curso_id = form.curso_id.value || null;
-        const trimestre = form.trimestre.value || null;
+        const cuatrimestre = form.cuatrimestre.value || null;
         const unidad = form.unidad.value.trim();
         const boton = form.querySelector("button[type=submit]");
 
@@ -164,7 +153,7 @@ async function inicializarFormularioSubir() {
             .insert({
                 titulo, descripcion, nombre_archivo: archivo.name, ruta_archivo: rutaArchivo,
                 tipo_archivo: validacion.extension, tamano_archivo: archivo.size,
-                autor_id: PERFIL_RECURSOS.id, categoria_id, curso_id, trimestre, unidad,
+                autor_id: PERFIL_RECURSOS.id, categoria_id, curso_id, cuatrimestre, unidad,
             })
             .select()
             .single();

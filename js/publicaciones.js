@@ -15,7 +15,7 @@ async function cargarPublicaciones() {
 
     let consulta = supabaseClient
         .from("publicaciones")
-        .select("id, titulo, contenido, fecha_creacion, publicado, autor:autor_id(nombre, apellido), categoria:categoria_id(nombre), curso:curso_id(nombre)")
+        .select("id, titulo, contenido, fecha_creacion, publicado, pdf_nombre_archivo, autor:autor_id(nombre, apellido), categoria:categoria_id(nombre), curso:curso_id(nombre)")
         .order("fecha_creacion", { ascending: orden === "asc" });
 
     if (categoriaId) consulta = consulta.eq("categoria_id", categoriaId);
@@ -39,6 +39,7 @@ async function cargarPublicaciones() {
             <div class="tarjeta-encabezado">
                 <span class="badge">${escapeHTML(pub.categoria?.nombre || "Sin categoría")}</span>
                 ${!pub.publicado ? '<span class="badge badge-borrador">Borrador</span>' : ""}
+                ${pub.pdf_nombre_archivo ? '<span class="badge badge-pdf">📎 PDF</span>' : ""}
             </div>
             <h3>${escapeHTML(pub.titulo)}</h3>
             <p class="texto-resumen">${escapeHTML(resumirTexto(pub.contenido))}</p>
@@ -103,13 +104,23 @@ async function inicializarFormularioCrear() {
         const contenido = sanitizeHTML(editor.innerHTML);
         const categoria_id = form.categoria_id.value || null;
         const curso_id = form.curso_id.value || null;
-        const trimestre = form.trimestre.value || null;
+        const cuatrimestre = form.cuatrimestre.value || null;
         const unidad = form.unidad.value.trim();
+        const archivoPDF = form.pdf.files[0] || null;
         const boton = form.querySelector("button[type=submit]");
 
         if (!titulo || !contenido || contenido === "<br>") {
             mostrarToast("Completá el título y el contenido.", "error");
             return;
+        }
+
+        let validacionPDF = null;
+        if (archivoPDF) {
+            validacionPDF = validarArchivoPDF(archivoPDF);
+            if (!validacionPDF.valido) {
+                mostrarToast(validacionPDF.mensaje, "error");
+                return;
+            }
         }
 
         boton.disabled = true;
@@ -118,20 +129,50 @@ async function inicializarFormularioCrear() {
         const { data: pub, error } = await supabaseClient
             .from("publicaciones")
             .insert({
-                titulo, contenido, categoria_id, curso_id, trimestre, unidad,
+                titulo, contenido, categoria_id, curso_id, cuatrimestre, unidad,
                 autor_id: PERFIL_ACTUAL.id, publicado: true,
             })
             .select()
             .single();
 
-        boton.disabled = false;
-        boton.textContent = "Publicar";
-
         if (error) {
+            boton.disabled = false;
+            boton.textContent = "Publicar";
             mostrarToast("No se pudo crear la publicación.", "error");
             console.error(error);
             return;
         }
+
+        if (archivoPDF) {
+            boton.textContent = "Subiendo PDF...";
+            const rutaPDF = `publicaciones/${PERFIL_ACTUAL.id}/${Date.now()}-${archivoPDF.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
+
+            const { error: errorSubidaPDF } = await supabaseClient.storage
+                .from(BUCKET_RECURSOS)
+                .upload(rutaPDF, archivoPDF, { cacheControl: "3600", upsert: false });
+
+            if (errorSubidaPDF) {
+                mostrarToast("La publicación se creó, pero no se pudo adjuntar el PDF.", "error");
+            } else {
+                const { error: errorActualizar } = await supabaseClient
+                    .from("publicaciones")
+                    .update({
+                        pdf_nombre_archivo: archivoPDF.name,
+                        pdf_ruta_archivo: rutaPDF,
+                        pdf_tamano_archivo: archivoPDF.size,
+                    })
+                    .eq("id", pub.id);
+
+                if (errorActualizar) {
+                    // Registro no actualizado: eliminamos el archivo huérfano en Storage.
+                    await supabaseClient.storage.from(BUCKET_RECURSOS).remove([rutaPDF]);
+                    mostrarToast("La publicación se creó, pero no se pudo adjuntar el PDF.", "error");
+                }
+            }
+        }
+
+        boton.disabled = false;
+        boton.textContent = "Publicar";
 
         const etiquetasTexto = form.etiquetas.value.trim();
         if (etiquetasTexto) await asociarEtiquetas("publicacion", pub.id, etiquetasTexto);
@@ -182,6 +223,7 @@ async function cargarDetallePublicacion() {
     const { data: pub, error } = await supabaseClient
         .from("publicaciones")
         .select(`id, titulo, contenido, fecha_creacion, fecha_actualizacion, publicado, autor_id,
+                 pdf_nombre_archivo, pdf_ruta_archivo, pdf_tamano_archivo,
                  autor:autor_id(nombre, apellido), categoria:categoria_id(nombre), curso:curso_id(nombre),
                  publicacion_etiquetas(etiquetas(nombre))`)
         .eq("id", id)
@@ -210,6 +252,12 @@ async function cargarDetallePublicacion() {
         </div>
         ${etiquetas.length ? `<div class="lista-etiquetas">${etiquetas.map((e) => `<span class="etiqueta">#${escapeHTML(e)}</span>`).join(" ")}</div>` : ""}
         <div class="contenido-publicacion">${sanitizeHTML(pub.contenido)}</div>
+        ${pub.pdf_ruta_archivo ? `
+            <div class="adjunto-pdf">
+                <span>📎 ${escapeHTML(pub.pdf_nombre_archivo)} (${formatearTamano(pub.pdf_tamano_archivo)})</span>
+                <button id="btn-descargar-pdf" class="btn btn-secundario btn-sm">Descargar PDF</button>
+            </div>
+        ` : ""}
         ${puedeEditar ? `
             <div class="acciones-publicacion">
                 <button id="btn-eliminar-publicacion" class="btn btn-peligro btn-sm">Eliminar publicación</button>
@@ -224,12 +272,19 @@ async function cargarDetallePublicacion() {
         </form>
     `;
 
+    document.getElementById("btn-descargar-pdf")?.addEventListener("click", () => {
+        descargarArchivoStorage(pub.pdf_ruta_archivo, pub.pdf_nombre_archivo);
+    });
+
     document.getElementById("btn-eliminar-publicacion")?.addEventListener("click", async () => {
         if (!confirmarAccion("¿Estás seguro de que deseas eliminar esta publicación?")) return;
         const { error: errorEliminar } = await supabaseClient.from("publicaciones").delete().eq("id", id);
         if (errorEliminar) {
             mostrarToast("No se pudo eliminar la publicación.", "error");
             return;
+        }
+        if (pub.pdf_ruta_archivo) {
+            await supabaseClient.storage.from(BUCKET_RECURSOS).remove([pub.pdf_ruta_archivo]);
         }
         mostrarToast("Publicación eliminada correctamente.", "exito");
         window.location.href = "publicaciones.html";
